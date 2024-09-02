@@ -1,0 +1,25 @@
+/* #messages {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#messages li {
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+#messages li.self {
+    background-color: #d1ffd1;
+    margin-left: auto;
+    text-align: right;
+}
+
+#messages li.other {
+    background-color: #f1f1f1;
+    margin-right: auto;
+    text-align: left;
+} */

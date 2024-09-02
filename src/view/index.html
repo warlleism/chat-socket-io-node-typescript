@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./styles/index.css">
+</head>
+
+<body>
+
+    <div>
+        <div>
+            <h3>Online Users</h3>
+            <ul id="userList"></ul>
+        </div>
+        <div>
+            <h3>Your Details</h3>
+            <p id="userDetails"></p>
+        </div>
+    </div>
+    <div class="chat-container">
+        <ul id="messages"></ul>
+        <form id="messageForm" action="">
+            <input id="input" type="text" />
+            <button>Send</button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        var socket = io();
+        const messageList = document.getElementById('messages');
+        const userList = document.getElementById('userList');
+        const userDetails = document.getElementById('userDetails');
+
+        let userId;
+        let username;
+        let currentChatUserId = null;
+
+        function loadMessages() {
+            if (currentChatUserId === null) return; 
+
+            const savedMessages = JSON.parse(localStorage.getItem('messages')) || [];
+            const messagesToRender = savedMessages.filter(msg =>
+                (msg.userId === userId && msg.targetId === currentChatUserId) ||
+                (msg.targetId === userId && msg.userId === currentChatUserId)
+            );
+
+            messagesToRender.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            messageList.innerHTML = '';
+
+            messagesToRender.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = `${msg.username} [${msg.timestamp}]: ${msg.msg}`;
+                li.className = msg.userId === userId ? 'self' : 'other';
+                messageList.appendChild(li);
+            });
+        }
+
+        socket.on('userDetails', (data) => {
+            userId = data.id;
+            username = data.name;
+            userDetails.textContent = `ID: ${userId}, Name: ${username}`;
+            localStorage.setItem('userId', userId);
+        });
+
+        socket.on('updateUsers', (users) => {
+            userList.innerHTML = '';
+            Object.values(users).forEach((user) => {
+                const li = document.createElement('li');
+                li.textContent = `${user.name} (${user.status})`;
+                li.dataset.id = user.id;
+                li.addEventListener('click', () => startPrivateChat(user.id));
+                userList.appendChild(li);
+            });
+        });
+
+        document.getElementById('messageForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const input = document.getElementById('input');
+
+            if (input.value && currentChatUserId) {
+                const messageData = {
+                    msg: input.value,
+                    timestamp: new Date().toISOString(),
+                    username: username,
+                    userId: userId,
+                    targetId: currentChatUserId
+                };
+                socket.emit('message', messageData.msg, currentChatUserId);
+                saveMessage(messageData);
+                input.value = '';
+            }
+        });
+
+        socket.on('message', (data) => {
+            if (data.userId === currentChatUserId || data.targetId === currentChatUserId) {
+                const li = document.createElement('li');
+                li.textContent = `${data.username} [${data.timestamp}]: ${data.msg}`;
+                li.className = data.userId === userId ? 'self' : 'other';
+                messageList.appendChild(li);
+                saveMessage(data);
+            }
+        });
+
+        function startPrivateChat(targetId) {
+            console.log(userList)
+            document.querySelectorAll('#userList li').forEach(li => li.classList.remove('selected-user'));
+            const targetUser = Array.from(userList.children).find(li => li.dataset.id === targetId);
+            if (targetUser) {
+                targetUser.classList.add('selected-user');
+                currentChatUserId = targetId; 
+                loadMessages(); 
+                socket.emit('startPrivateChat', targetId);
+            }
+        }
+
+        function saveMessage(messageData) {
+            let savedMessages = JSON.parse(localStorage.getItem('messages')) || [];
+            savedMessages.push(messageData);
+            localStorage.setItem('messages', JSON.stringify(savedMessages));
+        }
+    </script>
+
+</body>
+<style>
+    body {
+        position: relative;
+    }
+
+    .chat-container {
+        position: fixed;
+        width: 300px;
+        height: 300px;
+        border-radius: 5px;
+        bottom: 0;
+        right: 0;
+        margin: 20px;
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        background-color: #ebebeb;
+    }
+
+    #messages {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        height: 70%;
+        overflow-y: auto;
+    }
+
+    #messages li {
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 5px;
+        max-width: 70%;
+        word-wrap: break-word;
+    }
+
+    #messages li.self {
+        background-color: #d1ffd1;
+        margin-right: auto;
+        text-align: left;
+    }
+
+    #messages li.other {
+        background-color: #d3d3d3;
+        margin-left: auto;
+        text-align: right;
+    }
+
+    #messageForm {
+        display: flex;
+        position: relative;
+        height: 20%;
+    }
+
+    #messageForm>input {
+        width: 100%;
+        box-sizing: border-box;
+        padding-right: 50px;
+        outline: none;
+    }
+
+    #messageForm>button {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+    }
+
+    #userList li.selected-user {
+        background-color: #cfc;
+    }
+</style>
+
+</html>
