@@ -13,11 +13,11 @@ app.get('/', (req, res) => {
 });
 
 const users = {
-    "1": { id: "1", name: "Alice", status: "online" },
-    "2": { id: "2", name: "Bob", status: "online" },
-    "3": { id: "3", name: "Charlie", status: "online" },
-    "4": { id: "4", name: "Diana", status: "online" },
-    "5": { id: "5", name: "Eve", status: "online" }
+    "1": { id: "1", img: "https://www.pessoacomdeficiencia.sp.gov.br/wp-content/uploads/2024/08/Natacao_AS_036-1-scaled-e1724964134231-425x253.jpeg", name: "Alice", status: "online" },
+    "2": { id: "2", img: "https://www.designi.com.br/images/preview/12161378.jpg", name: "Bob", status: "offline" },
+    "3": { id: "3", img: "https://blog.unyleya.edu.br/wp-content/uploads/2017/12/saiba-como-a-educacao-ajuda-voce-a-ser-uma-pessoa-melhor.jpeg", name: "Charlie", status: "online" },
+    "4": { id: "4", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShfSmaz1Gbjq5Bt00OuV1gUU_pU2NMZkHs3g&s", name: "Diana", status: "offline" },
+    "5": { id: "5", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROZ2ZV8f_IBk865E7bEObKgFmfnBsorNTXcA&s", name: "Eve", status: "offline" }
 };
 
 const userSockets = {};
@@ -27,14 +27,15 @@ const offlineMessages = {};
 io.on('connection', (socket) => {
     console.log('user connected', socket.id);
 
-    const userId = Object.keys(users)[Math.floor(Math.random() * 5)];
+    const userId = Object.keys(users)[0];
     userSockets[userId] = socket.id;
+
     const userName = users[userId].name;
-    socket.emit('userDetails', { id: userId, name: userName });
+    socket.emit('userDetails', { id: userId, name: userName, img: users[userId].img, status: users[userId].status });
     io.emit('updateUsers', Object.values(users));
 
     if (offlineMessages[userId]) {
-        offlineMessages[userId].forEach(msg => {
+        offlineMessages[userId].forEach((msg: any) => {
             socket.emit('message', msg);
         });
         delete offlineMessages[userId];

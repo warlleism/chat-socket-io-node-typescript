@@ -6,26 +6,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="./styles/index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </head>
 
 <body>
-
-    <div>
-        <div>
-            <h3>Online Users</h3>
-            <ul id="userList"></ul>
+    <div class="main-chat-container">
+        <div class="user-container">
+            <div id="userDetails"></div>
+            <div class="user-list-container">
+                <div class="user-list-header">
+                    <span class="material-symbols-outlined" style="margin-right: 10px; font-size: 1.5rem;">
+                        mail
+                    </span>
+                    <h3 style="font-size: 1.2rem; color: #1b1b1b; font-weight: 400;">chats</h3>
+                </div>
+                <ul id="userList"></ul>
+            </div>
         </div>
-        <div>
-            <h3>Your Details</h3>
-            <p id="userDetails"></p>
+        <div class="chat-container">
+            <ul id="messages"></ul>
+            <form id="messageForm" action="">
+                <input id="input" type="text" placeholder="Digitar mensagem..." />
+                <button>
+                    <span class="material-symbols-outlined">
+                        send
+                    </span>
+                </button>
+            </form>
         </div>
-    </div>
-    <div class="chat-container">
-        <ul id="messages"></ul>
-        <form id="messageForm" action="">
-            <input id="input" type="text" />
-            <button>Send</button>
-        </form>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -41,21 +55,34 @@
         let currentChatUserId = null;
 
         function loadMessages() {
-            if (currentChatUserId === null) return; 
+            if (currentChatUserId === null) return;
 
             const savedMessages = JSON.parse(localStorage.getItem('messages')) || [];
             const messagesToRender = savedMessages.filter(msg =>
                 (msg.userId === userId && msg.targetId === currentChatUserId) ||
                 (msg.targetId === userId && msg.userId === currentChatUserId)
             );
-
             messagesToRender.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
             messageList.innerHTML = '';
-
             messagesToRender.forEach(msg => {
                 const li = document.createElement('li');
-                li.textContent = `${msg.username} [${msg.timestamp}]: ${msg.msg}`;
+
+                const usernameDiv = document.createElement('div');
+                usernameDiv.textContent = msg.username;
+                usernameDiv.className = 'username';
+
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = msg.msg;
+                messageDiv.className = 'message';
+
+                const timeDiv = document.createElement('div');
+                timeDiv.textContent = msg.timestamp;
+                timeDiv.className = 'time';
+
+                li.appendChild(usernameDiv);
+                li.appendChild(messageDiv);
+                li.appendChild(timeDiv);
+
                 li.className = msg.userId === userId ? 'self' : 'other';
                 messageList.appendChild(li);
             });
@@ -64,20 +91,45 @@
         socket.on('userDetails', (data) => {
             userId = data.id;
             username = data.name;
-            userDetails.textContent = `ID: ${userId}, Name: ${username}`;
+
+            const img = document.createElement('img');
+            img.src = data.img;
+            userDetails.appendChild(img);
+
+            const textElement = document.createElement('p');
+            textElement.textContent = username;
+            userDetails.appendChild(textElement);
+
+            const statusDiv = document.createElement('div');
+            statusDiv.className = data.status === 'online' ? 'online' : 'offline';
+            userDetails.appendChild(statusDiv);
+
             localStorage.setItem('userId', userId);
         });
 
         socket.on('updateUsers', (users) => {
+            console.log(users)
             userList.innerHTML = '';
             Object.values(users).forEach((user) => {
                 const li = document.createElement('li');
-                li.textContent = `${user.name} (${user.status})`;
+                const img = document.createElement('img');
+                const statusDiv = document.createElement('div');
+
+                img.src = user.img;
+                li.appendChild(img);
+                li.appendChild(document.createTextNode(user.name));
+
+
+                statusDiv.className = user.status === 'online' ? 'online' : 'offline';
+                li.appendChild(statusDiv);
+
                 li.dataset.id = user.id;
                 li.addEventListener('click', () => startPrivateChat(user.id));
+
                 userList.appendChild(li);
             });
         });
+
 
         document.getElementById('messageForm').addEventListener('submit', (event) => {
             event.preventDefault();
@@ -92,29 +144,45 @@
                     targetId: currentChatUserId
                 };
                 socket.emit('message', messageData.msg, currentChatUserId);
-                saveMessage(messageData);
                 input.value = '';
             }
         });
 
         socket.on('message', (data) => {
-            if (data.userId === currentChatUserId || data.targetId === currentChatUserId) {
-                const li = document.createElement('li');
-                li.textContent = `${data.username} [${data.timestamp}]: ${data.msg}`;
-                li.className = data.userId === userId ? 'self' : 'other';
-                messageList.appendChild(li);
-                saveMessage(data);
-            }
+            const target = data.targetId === userId ? data.userId : data.targetId;
+            startPrivateChat(target);
+            const li = document.createElement('li');
+
+            const usernameDiv = document.createElement('div');
+            usernameDiv.textContent = data.username;
+            usernameDiv.className = 'username';
+
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = data.msg;
+            messageDiv.className = 'message';
+
+            const timeDiv = document.createElement('div');
+            timeDiv.textContent = data.timestamp;
+            timeDiv.className = 'time';
+
+            li.appendChild(usernameDiv);
+            li.appendChild(messageDiv);
+            li.appendChild(timeDiv);
+
+
+            li.className = data.userId === userId ? 'self' : 'other';
+            messageList.appendChild(li);
+            saveMessage(data);
         });
 
+
         function startPrivateChat(targetId) {
-            console.log(userList)
             document.querySelectorAll('#userList li').forEach(li => li.classList.remove('selected-user'));
             const targetUser = Array.from(userList.children).find(li => li.dataset.id === targetId);
             if (targetUser) {
                 targetUser.classList.add('selected-user');
-                currentChatUserId = targetId; 
-                loadMessages(); 
+                currentChatUserId = targetId;
+                loadMessages();
                 socket.emit('startPrivateChat', targetId);
             }
         }
@@ -128,74 +196,243 @@
 
 </body>
 <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
     body {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f2f2f2;
+        font-family: "Roboto", sans-serif;
+    }
+
+    .main-chat-container {
+        width: 83%;
+        height: 91%;
+        display: flex;
+        overflow: hidden;
+        border-radius: 5px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-container {
+        gap: 10px;
+        width: 30%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+    }
+
+    .user-container #userDetails {
+        gap: 10px;
+        width: 100%;
+        height: 60px;
+        display: flex;
+        padding: 10px 0;
+        position: relative;
+        align-items: center;
+        border-bottom: solid 1px #00000014;
+    }
+
+    .user-container #userDetails img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        margin-left: 20px;
+        border-radius: 100px;
+    }
+
+    .user-container ul {
+        display: flex;
+        list-style-type: none;
+        flex-direction: column;
+    }
+
+    .user-list-container #userList {
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .user-list-container>.user-list-header {
+        display: flex;
+        padding: 10px;
+        align-items: center;
+    }
+
+    .user-list-container #userList li {
+        gap: 10px;
+        width: 100%;
+        height: 60px;
+        display: flex;
+        padding: 10px 0;
+        align-items: center;
         position: relative;
     }
 
-    .chat-container {
-        position: fixed;
-        width: 300px;
-        height: 300px;
-        border-radius: 5px;
-        bottom: 0;
-        right: 0;
-        margin: 20px;
-        display: flex;
-        justify-content: space-between;
-        flex-direction: column;
-        background-color: #ebebeb;
+    .user-list-container #userList li img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        margin-left: 20px;
+        border-radius: 100px;
     }
 
-    #messages {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-        height: 70%;
-        overflow-y: auto;
+    .user-list-container #userList li::before {
+        content: "";
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: .8px;
+        position: absolute;
+        background-color: #cccccc41;
     }
+
+
+    #userList li.selected-user {
+        background-color: #f0f2f5;
+    }
+
+    #userList li  {
+        font-weight: 300;
+    }
+
+
+    .chat-container {
+        width: 70%;
+        height: 100%;
+        display: flex;
+        padding: 10px;
+        box-sizing: border-box;
+        flex-direction: column;
+        background-color: #f9f9f9;
+        justify-content: space-between;
+    }
+
 
     #messages li {
-        margin: 5px 0;
+        margin: 5px 10px;
         padding: 10px;
+        width: 400px;
+        list-style: none;
         border-radius: 5px;
-        max-width: 70%;
+        position: relative;
         word-wrap: break-word;
+        box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.055);
+    }
+
+    #messages li .username {
+        padding: 10px;
+        color: #373737;
+        font-weight: 600;
+        font-size: 1.2rem;
+        border-bottom: solid 1px #00000014;
+    }
+
+    #messages li .message {
+        padding: 10px;
+    }
+
+    #messages li.self .time {
+        position: absolute;
+        bottom: 5px;
+        right: 10px;
+        font-size: .8rem;
+        color: #00000057;
+    }
+
+    #messages li.other .time {
+        position: absolute;
+        bottom: 5px;
+        left: 10px;
+        font-size: .8rem;
+        color: #00000057;
     }
 
     #messages li.self {
-        background-color: #d1ffd1;
+        background-color: #78ff5325;
         margin-right: auto;
         text-align: left;
+        border: solid 1px #0000000f;
     }
 
     #messages li.other {
-        background-color: #d3d3d3;
+        background-color: #fff;
         margin-left: auto;
         text-align: right;
+        border: solid 1px #0000000f;
+
     }
 
     #messageForm {
+        height: 5%;
         display: flex;
+        overflow: hidden;
         position: relative;
-        height: 20%;
+        align-items: center;
+        border-radius: 100px;
+        border: solid 1px #0000006b;
+
     }
 
     #messageForm>input {
-        width: 100%;
-        box-sizing: border-box;
-        padding-right: 50px;
+        width: 90%;
+        border: none;
         outline: none;
+        padding-left: 10px;
+        padding-right: 50px;
+        box-sizing: border-box;
     }
 
     #messageForm>button {
-        position: absolute;
-        top: 0;
-        right: 0;
+        width: 10%;
         height: 100%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        color: #0000008a;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
     }
 
-    #userList li.selected-user {
-        background-color: #cfc;
+    #messageForm>button:hover {
+        color: #1b1b1b;
+        background-color: rgba(0, 0, 0, 0.048);
+    }
+
+    #messageForm>button:active {
+        color: #070707;
+        background-color: rgba(0, 0, 0, 0.137);
+    }
+
+    .online {
+        top: 49px;
+        left: 56px;
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        border-radius: 100px;
+        border: solid 2px #fff;
+        background-color: #00ff7e;
+    }
+
+    .offline {
+        top: 49px;
+        left: 56px;
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        border-radius: 100px;
+        border: solid 2px #fff;
+        background-color: #dfdede;
     }
 </style>
 
