@@ -22,9 +22,6 @@
             <div id="userDetails"></div>
             <div class="user-list-container">
                 <div class="user-list-header">
-                    <span class="material-symbols-outlined" style="margin-right: 10px; font-size: 1.5rem;">
-                        mail
-                    </span>
                     <h3 style="font-size: 1.2rem; color: #1b1b1b; font-weight: 400;">chats</h3>
                 </div>
                 <ul id="userList"></ul>
@@ -72,7 +69,7 @@
                 const li = document.createElement('li');
 
                 const usernameDiv = document.createElement('div');
-                usernameDiv.textContent = msg.userId === userId ? 'você' : msg.username;
+                usernameDiv.textContent = msg.username;
                 usernameDiv.className = 'username';
 
                 const messageDiv = document.createElement('div');
@@ -105,15 +102,19 @@
             name.textContent = username;
             userDetails.appendChild(name);
 
+            const profileTitle = document.createElement('div');
+            profileTitle.textContent = 'Perfil';
+            profileTitle.style.margin = '30px auto';
+            profileTitle.style.width = 'fit-content';
+            profileTitle.style.fontSize = '2rem';
+            profileTitle.style.fontWeight = '500';
+            profileTitle.style.color = '#434343';
+
             const email = document.createElement('div');
             email.textContent = data.email;
 
             const phone = document.createElement('div');
             phone.textContent = data.phone;
-
-            const status = document.createElement('div');
-            status.className = data.status === 'online' ? 'online status' : 'offline status';
-            userDetails.appendChild(status);
 
             const profileDiv = document.createElement('div')
             profileDiv.className = 'see-profile-container';
@@ -127,7 +128,6 @@
             const profileRowImgContainer = document.createElement('div')
             profileRowImgContainer.className = 'profile-row-img-container';
             profileRowImgContainer.appendChild(profileRowImg)
-            profileRowImgContainer.appendChild(status)
 
             const profileRowInfo = document.createElement('div')
             profileRowInfo.className = 'profile-row-info-personal';
@@ -141,13 +141,13 @@
             profileRow.appendChild(profileRowImgContainer)
             profileRow.appendChild(profileRowInfo)
 
-
             const iconSpan = document.createElement('span');
             iconSpan.className = 'material-symbols-outlined close-icon';
             iconSpan.style.marginRight = '10px';
             iconSpan.style.fontSize = '1.5rem';
             iconSpan.textContent = 'arrow_back_ios';
 
+            profileDiv.appendChild(profileTitle)
             profileDiv.appendChild(iconSpan)
             profileDiv.appendChild(profileRow)
 

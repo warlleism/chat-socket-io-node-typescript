@@ -10,7 +10,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f2f2f25e;
+    background-color: #bfbdbd5e;
     font-family: "Roboto", sans-serif;
 }
 
@@ -20,9 +20,14 @@ body {
     height: 91%;
     display: flex;
     overflow: hidden;
+    overflow-y: auto;
     border-radius: 5px;
     align-items: center;
     justify-content: center;
+
+    @media screen and (max-width: 1200px) {
+        width: 95%;
+    }
 }
 
 .user-container {
@@ -38,76 +43,93 @@ body {
 .user-container>.see-profile-container {
     left: 0;
     width: 100%;
+    overflow: hidden;
     height: 100%;
     position: absolute;
-    background-color: rgb(255, 255, 255);
+    background-image: linear-gradient(180deg, hsl(150deg 100% 50%) 0%, hsl(150deg 100% 50%) 7%, hsl(150deg 100% 50%) 14%, hsl(150deg 100% 50%) 21%, hsl(140deg 100% 68%) 29%, hsl(134deg 100% 81%) 36%, hsl(131deg 100% 91%) 43%, hsl(0deg 0% 100%) 50%, hsl(300deg 100% 100%) 57%, hsl(300deg 100% 100%) 64%, hsl(300deg 100% 100%) 71%, hsl(300deg 100% 100%) 79%, hsl(300deg 100% 100%) 86%, hsl(300deg 100% 100%) 93%, hsl(0deg 0% 100%) 100%);
 
     .close-icon {
-        position: absolute;
-        cursor: pointer;
-        right: 0px;
-        top: 30px;
-        z-index: 999;
-        color: #a7a7a7;
+    position: absolute;
+    cursor: pointer;
+    right: 0px;
+    top: 30px;
+    z-index: 999;
+    color: #434343;
     }
 }
 
 .user-container>.see-profile-container>.profile-row-info {
-    display: flex;
-    padding: 10px;
     gap: 10px;
+    display: flex;
+    height: 100%;
     position: relative;
-    background: #e7e7e7ad;
     align-items: center;
+    flex-direction: column;
     box-sizing: border-box;
 
     .profile-row-img-container {
         position: relative;
         cursor: pointer;
 
-        .status {
-            left: 42px;
-            top: 40px;
-        }
-
         img {
-            width: 60px;
-            height: 60px;
+            width: 234px;
+            height: 237px;
+            margin-top: 43px;
             object-fit: cover;
-            border-radius: 100px;
+            border-radius: 1000px;
         }
     }
 
     .profile-row-info-personal {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+
 
         div:nth-child(1) {
+            display: flex;
+            text-align: center;
+            width: 100%;
             font-weight: 400;
-            font-size: 1.2rem;
+            font-size: 2rem;
             color: rgb(34, 34, 34);
+            justify-content: center;
+            align-items: center;
         }
 
         div:nth-child(2) {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 4px;
             font-weight: 400;
-            font-size: .9rem;
-            color: rgba(34, 34, 34, 0.692);
+            font-size: 1.3rem;
+            color: rgb(34, 34, 34);
         }
 
         div:nth-child(3) {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
             font-weight: 300;
-            font-size: .8rem;
-            color: rgba(34, 34, 34, 0.473);
+            font-size: 1rem;
+            color: rgb(34, 34, 34);
         }
     }
-
-
 }
-
 
 .user-container #userDetails {
     gap: 10px;
     width: 100%;
     height: 60px;
     display: flex;
+    font-size: 1.3rem;
     padding: 10px 0;
     position: relative;
     align-items: center;
@@ -197,6 +219,8 @@ body {
     padding: 10px;
     align-items: center;
     margin-bottom: 30px;
+    color: #252525;
+    font-size: 1.2rem;
     box-sizing: border-box;
     background-color: #f0f2f5;
 }
@@ -231,6 +255,8 @@ body {
 
 #messages li .message {
     padding: 10px;
+    font-size: 1.2rem;
+    font-weight: 400;
 }
 
 #messages li.self .time {
@@ -250,7 +276,8 @@ body {
 }
 
 #messages li.self {
-    background-color: #78ff5325;
+    color: #ffffff;
+    background-color: #00e571;
     margin-right: auto;
     text-align: left;
     border: solid 1px #0000000f;
@@ -296,16 +323,15 @@ body {
     border: none;
     cursor: pointer;
     display: flex;
-    border-left: 1px solid rgba(0, 0, 0, 0.089);
-    color: #0000008a;
+    color: #fff;
     align-items: center;
     justify-content: center;
-    background-color: #fff;
+    background-color: #00ff7e;
+    border-left: 1px solid rgba(0, 0, 0, 0.089);
 }
 
 #messageForm>button:hover {
     color: #1b1b1b;
-    background-color: rgba(0, 0, 0, 0.048);
 }
 
 #messageForm>button:active {

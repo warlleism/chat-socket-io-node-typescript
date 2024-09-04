@@ -16,11 +16,11 @@ app.get('/', (req, res) => {
 });
 
 const users = {
-    "1": { id: "1", img: "https://www.pessoacomdeficiencia.sp.gov.br/wp-content/uploads/2024/08/Natacao_AS_036-1-scaled-e1724964134231-425x253.jpeg", phone: "(27)995804151", email: "warlleimartins@hotmail.com", username: "Alice", status: "online" },
-    "2": { id: "2", img: "https://www.designi.com.br/images/preview/12161378.jpg", phone: "(27)995804151", email: "warlleimartins@hotmail.com", username: "Bob", status: "offline" },
-    "3": { id: "3", img: "https://blog.unyleya.edu.br/wp-content/uploads/2017/12/saiba-como-a-educacao-ajuda-voce-a-ser-uma-pessoa-melhor.jpeg", phone: "(27)995804151", email: "warlleimartins@hotmail.com", username: "Charlie", status: "online" },
-    "4": { id: "4", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShfSmaz1Gbjq5Bt00OuV1gUU_pU2NMZkHs3g&s", phone: "(27)995804151", email: "warlleimartins@hotmail.com", username: "Diana", status: "offline" },
-    "5": { id: "5", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROZ2ZV8f_IBk865E7bEObKgFmfnBsorNTXcA&s", phone: "(27)995804151", email: "warlleimartins@hotmail.com", username: "Everaldo", status: "offline" }
+    "1": { id: "1", img: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", phone: "(11)912345678", email: "alice@example.com", username: "Alice", status: "online" },
+    "2": { id: "2", img: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", phone: "(21)987654321", email: "bob@example.com", username: "Bob", status: "offline" },
+    "3": { id: "3", img: "https://images.pexels.com/photos/3088526/pexels-photo-3088526.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", phone: "(31)923456789", email: "charlie@example.com", username: "Charlie", status: "offline" },
+    "4": { id: "4", img: "https://images.pexels.com/photos/1102341/pexels-photo-1102341.jpeg", phone: "(41)934567890", email: "diana@example.com", username: "Diana", status: "offline" },
+    "5": { id: "5", img: "https://images.pexels.com/photos/769690/pexels-photo-769690.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", phone: "(51)945678901", email: "everaldo@example.com", username: "Everaldo", status: "online" }
 };
 
 const userSockets = {};
