@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="./styles/index.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="/style.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
         rel="stylesheet">
@@ -17,7 +18,7 @@
 
 <body>
     <div class="main-chat-container">
-        <div class="user-container">
+        <div class="user-container" id="user-container">
             <div id="userDetails"></div>
             <div class="user-list-container">
                 <div class="user-list-header">
@@ -30,6 +31,7 @@
             </div>
         </div>
         <div class="chat-container">
+            <div class="chat-header" id="chatHeader"></div>
             <ul id="messages"></ul>
             <form id="messageForm" action="">
                 <input id="input" type="text" placeholder="Digitar mensagem..." />
@@ -49,6 +51,8 @@
         const messageList = document.getElementById('messages');
         const userList = document.getElementById('userList');
         const userDetails = document.getElementById('userDetails');
+        const chatHeader = document.getElementById('chatHeader');
+        const user_container = document.getElementById('user-container');
 
         let userId;
         let username;
@@ -68,7 +72,7 @@
                 const li = document.createElement('li');
 
                 const usernameDiv = document.createElement('div');
-                usernameDiv.textContent = msg.username;
+                usernameDiv.textContent = msg.userId === userId ? 'você' : msg.username;
                 usernameDiv.className = 'username';
 
                 const messageDiv = document.createElement('div');
@@ -89,46 +93,99 @@
         }
 
         socket.on('userDetails', (data) => {
+
             userId = data.id;
-            username = data.name;
+            username = data.username;
 
             const img = document.createElement('img');
             img.src = data.img;
             userDetails.appendChild(img);
 
-            const textElement = document.createElement('p');
-            textElement.textContent = username;
-            userDetails.appendChild(textElement);
+            const name = document.createElement('div');
+            name.textContent = username;
+            userDetails.appendChild(name);
 
-            const statusDiv = document.createElement('div');
-            statusDiv.className = data.status === 'online' ? 'online' : 'offline';
-            userDetails.appendChild(statusDiv);
+            const email = document.createElement('div');
+            email.textContent = data.email;
+
+            const phone = document.createElement('div');
+            phone.textContent = data.phone;
+
+            const status = document.createElement('div');
+            status.className = data.status === 'online' ? 'online status' : 'offline status';
+            userDetails.appendChild(status);
+
+            const profileDiv = document.createElement('div')
+            profileDiv.className = 'see-profile-container';
+            user_container.appendChild(profileDiv)
+            profileDiv.style.display = 'none';
+
+            const profileRowImg = document.createElement('div')
+            const clonedImg = img.cloneNode(true);
+            profileRowImg.appendChild(clonedImg);
+
+            const profileRowImgContainer = document.createElement('div')
+            profileRowImgContainer.className = 'profile-row-img-container';
+            profileRowImgContainer.appendChild(profileRowImg)
+            profileRowImgContainer.appendChild(status)
+
+            const profileRowInfo = document.createElement('div')
+            profileRowInfo.className = 'profile-row-info-personal';
+            const clonedName = name.cloneNode(true);
+            profileRowInfo.appendChild(clonedName)
+            profileRowInfo.appendChild(email)
+            profileRowInfo.appendChild(phone)
+
+            const profileRow = document.createElement('div')
+            profileRow.className = 'profile-row-info'
+            profileRow.appendChild(profileRowImgContainer)
+            profileRow.appendChild(profileRowInfo)
+
+
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'material-symbols-outlined close-icon';
+            iconSpan.style.marginRight = '10px';
+            iconSpan.style.fontSize = '1.5rem';
+            iconSpan.textContent = 'arrow_back_ios';
+
+            profileDiv.appendChild(iconSpan)
+            profileDiv.appendChild(profileRow)
+
+            img.addEventListener('click', () => {
+                profileDiv.style.display = profileDiv.style.display = 'block';
+            })
+
+            iconSpan.addEventListener('click', () => {
+                profileDiv.style.display = profileDiv.style.display = 'none';
+            })
 
             localStorage.setItem('userId', userId);
         });
 
         socket.on('updateUsers', (users) => {
-            console.log(users)
             userList.innerHTML = '';
-            Object.values(users).forEach((user) => {
+            Object.values(users).filter(user => user.id !== userId).forEach((user) => {
                 const li = document.createElement('li');
                 const img = document.createElement('img');
                 const statusDiv = document.createElement('div');
 
                 img.src = user.img;
                 li.appendChild(img);
-                li.appendChild(document.createTextNode(user.name));
+                li.appendChild(document.createTextNode(user.username));
 
-
-                statusDiv.className = user.status === 'online' ? 'online' : 'offline';
+                statusDiv.className = user.status === 'online' ? 'online status' : 'offline status';
                 li.appendChild(statusDiv);
 
                 li.dataset.id = user.id;
-                li.addEventListener('click', () => startPrivateChat(user.id));
+
+                li.addEventListener('click', () => {
+                    startPrivateChat(user.id, user);
+                });
 
                 userList.appendChild(li);
             });
         });
+
 
 
         document.getElementById('messageForm').addEventListener('submit', (event) => {
@@ -149,8 +206,9 @@
         });
 
         socket.on('message', (data) => {
+
             const target = data.targetId === userId ? data.userId : data.targetId;
-            startPrivateChat(target);
+            startPrivateChat(target, data);
             const li = document.createElement('li');
 
             const usernameDiv = document.createElement('div');
@@ -169,14 +227,13 @@
             li.appendChild(messageDiv);
             li.appendChild(timeDiv);
 
-
             li.className = data.userId === userId ? 'self' : 'other';
             messageList.appendChild(li);
             saveMessage(data);
         });
 
 
-        function startPrivateChat(targetId) {
+        function startPrivateChat(targetId, data) {
             document.querySelectorAll('#userList li').forEach(li => li.classList.remove('selected-user'));
             const targetUser = Array.from(userList.children).find(li => li.dataset.id === targetId);
             if (targetUser) {
@@ -185,6 +242,18 @@
                 loadMessages();
                 socket.emit('startPrivateChat', targetId);
             }
+
+            if (data.userId === userId) {
+                return
+            }
+
+            chatHeader.innerHTML = '';
+            const headerImg = document.createElement('img');
+            headerImg.src = data.img;
+            const divName = document.createElement('div');
+            divName.textContent = data.username;
+            chatHeader.appendChild(headerImg);
+            chatHeader.appendChild(divName);
         }
 
         function saveMessage(messageData) {
@@ -195,245 +264,6 @@
     </script>
 
 </body>
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-    }
 
-    body {
-        position: relative;
-        width: 100%;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f2f2f2;
-        font-family: "Roboto", sans-serif;
-    }
-
-    .main-chat-container {
-        width: 83%;
-        height: 91%;
-        display: flex;
-        overflow: hidden;
-        border-radius: 5px;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .user-container {
-        gap: 10px;
-        width: 30%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        background-color: #ffffff;
-    }
-
-    .user-container #userDetails {
-        gap: 10px;
-        width: 100%;
-        height: 60px;
-        display: flex;
-        padding: 10px 0;
-        position: relative;
-        align-items: center;
-        border-bottom: solid 1px #00000014;
-    }
-
-    .user-container #userDetails img {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        margin-left: 20px;
-        border-radius: 100px;
-    }
-
-    .user-container ul {
-        display: flex;
-        list-style-type: none;
-        flex-direction: column;
-    }
-
-    .user-list-container #userList {
-        width: 100%;
-        cursor: pointer;
-    }
-
-    .user-list-container>.user-list-header {
-        display: flex;
-        padding: 10px;
-        align-items: center;
-    }
-
-    .user-list-container #userList li {
-        gap: 10px;
-        width: 100%;
-        height: 60px;
-        display: flex;
-        padding: 10px 0;
-        align-items: center;
-        position: relative;
-    }
-
-    .user-list-container #userList li img {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        margin-left: 20px;
-        border-radius: 100px;
-    }
-
-    .user-list-container #userList li::before {
-        content: "";
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: .8px;
-        position: absolute;
-        background-color: #cccccc41;
-    }
-
-
-    #userList li.selected-user {
-        background-color: #f0f2f5;
-    }
-
-    #userList li  {
-        font-weight: 300;
-    }
-
-
-    .chat-container {
-        width: 70%;
-        height: 100%;
-        display: flex;
-        padding: 10px;
-        box-sizing: border-box;
-        flex-direction: column;
-        background-color: #f9f9f9;
-        justify-content: space-between;
-    }
-
-
-    #messages li {
-        margin: 5px 10px;
-        padding: 10px;
-        width: 400px;
-        list-style: none;
-        border-radius: 5px;
-        position: relative;
-        word-wrap: break-word;
-        box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.055);
-    }
-
-    #messages li .username {
-        padding: 10px;
-        color: #373737;
-        font-weight: 600;
-        font-size: 1.2rem;
-        border-bottom: solid 1px #00000014;
-    }
-
-    #messages li .message {
-        padding: 10px;
-    }
-
-    #messages li.self .time {
-        position: absolute;
-        bottom: 5px;
-        right: 10px;
-        font-size: .8rem;
-        color: #00000057;
-    }
-
-    #messages li.other .time {
-        position: absolute;
-        bottom: 5px;
-        left: 10px;
-        font-size: .8rem;
-        color: #00000057;
-    }
-
-    #messages li.self {
-        background-color: #78ff5325;
-        margin-right: auto;
-        text-align: left;
-        border: solid 1px #0000000f;
-    }
-
-    #messages li.other {
-        background-color: #fff;
-        margin-left: auto;
-        text-align: right;
-        border: solid 1px #0000000f;
-
-    }
-
-    #messageForm {
-        height: 5%;
-        display: flex;
-        overflow: hidden;
-        position: relative;
-        align-items: center;
-        border-radius: 100px;
-        border: solid 1px #0000006b;
-
-    }
-
-    #messageForm>input {
-        width: 90%;
-        border: none;
-        outline: none;
-        padding-left: 10px;
-        padding-right: 50px;
-        box-sizing: border-box;
-    }
-
-    #messageForm>button {
-        width: 10%;
-        height: 100%;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        color: #0000008a;
-        align-items: center;
-        justify-content: center;
-        background-color: #fff;
-    }
-
-    #messageForm>button:hover {
-        color: #1b1b1b;
-        background-color: rgba(0, 0, 0, 0.048);
-    }
-
-    #messageForm>button:active {
-        color: #070707;
-        background-color: rgba(0, 0, 0, 0.137);
-    }
-
-    .online {
-        top: 49px;
-        left: 56px;
-        width: 12px;
-        height: 12px;
-        position: absolute;
-        border-radius: 100px;
-        border: solid 2px #fff;
-        background-color: #00ff7e;
-    }
-
-    .offline {
-        top: 49px;
-        left: 56px;
-        width: 12px;
-        height: 12px;
-        position: absolute;
-        border-radius: 100px;
-        border: solid 2px #fff;
-        background-color: #dfdede;
-    }
-</style>
 
 </html>

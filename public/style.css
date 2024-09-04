@@ -1,0 +1,332 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f2f2f25e;
+    font-family: "Roboto", sans-serif;
+}
+
+
+.main-chat-container {
+    width: 83%;
+    height: 91%;
+    display: flex;
+    overflow: hidden;
+    border-radius: 5px;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-container {
+    gap: 10px;
+    width: 30%;
+    height: 100%;
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    background-color: #ffffff;
+}
+
+.user-container>.see-profile-container {
+    left: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-color: rgb(255, 255, 255);
+
+    .close-icon {
+        position: absolute;
+        cursor: pointer;
+        right: 0px;
+        top: 30px;
+        z-index: 999;
+        color: #a7a7a7;
+    }
+}
+
+.user-container>.see-profile-container>.profile-row-info {
+    display: flex;
+    padding: 10px;
+    gap: 10px;
+    position: relative;
+    background: #e7e7e7ad;
+    align-items: center;
+    box-sizing: border-box;
+
+    .profile-row-img-container {
+        position: relative;
+        cursor: pointer;
+
+        .status {
+            left: 42px;
+            top: 40px;
+        }
+
+        img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 100px;
+        }
+    }
+
+    .profile-row-info-personal {
+
+        div:nth-child(1) {
+            font-weight: 400;
+            font-size: 1.2rem;
+            color: rgb(34, 34, 34);
+        }
+
+        div:nth-child(2) {
+            font-weight: 400;
+            font-size: .9rem;
+            color: rgba(34, 34, 34, 0.692);
+        }
+
+        div:nth-child(3) {
+            font-weight: 300;
+            font-size: .8rem;
+            color: rgba(34, 34, 34, 0.473);
+        }
+    }
+
+
+}
+
+
+.user-container #userDetails {
+    gap: 10px;
+    width: 100%;
+    height: 60px;
+    display: flex;
+    padding: 10px 0;
+    position: relative;
+    align-items: center;
+    border-bottom: solid 1px #00000014;
+}
+
+.user-container #userDetails img {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    object-fit: cover;
+    margin-left: 20px;
+    border-radius: 100px;
+}
+
+.user-container ul {
+    display: flex;
+    list-style-type: none;
+    flex-direction: column;
+}
+
+.user-list-container #userList {
+    width: 100%;
+    cursor: pointer;
+}
+
+.user-list-container>.user-list-header {
+    display: flex;
+    padding: 10px;
+    align-items: center;
+}
+
+.user-list-container #userList li {
+    gap: 10px;
+    width: 100%;
+    height: 60px;
+    display: flex;
+    padding: 10px 0;
+    align-items: center;
+    position: relative;
+}
+
+.user-list-container #userList li img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-left: 20px;
+    border-radius: 100px;
+}
+
+.user-list-container #userList li::before {
+    content: "";
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: .8px;
+    position: absolute;
+    background-color: #cccccc41;
+}
+
+
+#userList li.selected-user {
+    background-color: #f0f2f5;
+}
+
+#userList li {
+    font-weight: 300;
+}
+
+
+.chat-container {
+    width: 70%;
+    height: 100%;
+    display: flex;
+    position: relative;
+    box-sizing: border-box;
+    flex-direction: column;
+    background-color: #f9f9f9;
+}
+
+
+.chat-container>.chat-header {
+    gap: 10px;
+    width: 100%;
+    height: 82px;
+    display: flex;
+    padding: 10px;
+    align-items: center;
+    margin-bottom: 30px;
+    box-sizing: border-box;
+    background-color: #f0f2f5;
+}
+
+.chat-container>.chat-header>img {
+    width: 50px;
+    height: 50px;
+    border-radius: 100px;
+    object-fit: cover;
+}
+
+
+
+#messages li {
+    margin: 5px 10px;
+    padding: 5px;
+    width: 400px;
+    list-style: none;
+    border-radius: 10px;
+    position: relative;
+    word-wrap: break-word;
+    box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.041);
+}
+
+#messages li .username {
+    padding: 5px;
+    color: #373737;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: solid 1px #00000014;
+}
+
+#messages li .message {
+    padding: 10px;
+}
+
+#messages li.self .time {
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
+    font-size: .8rem;
+    color: #00000057;
+}
+
+#messages li.other .time {
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    font-size: .8rem;
+    color: #00000057;
+}
+
+#messages li.self {
+    background-color: #78ff5325;
+    margin-right: auto;
+    text-align: left;
+    border: solid 1px #0000000f;
+}
+
+#messages li.other {
+    background-color: #fff;
+    margin-left: auto;
+    text-align: right;
+    border: solid 1px #0000000f;
+
+}
+
+#messageForm {
+    left: 50%;
+    height: 5%;
+    width: 96%;
+    bottom: 10px;
+    display: flex;
+    margin: 0 auto;
+    overflow: hidden;
+    position: absolute;
+    align-items: center;
+    border-radius: 100px;
+    transform: translateX(-50%);
+    border: solid 1px #0000006b;
+}
+
+
+#messageForm>input {
+    width: 90%;
+    height: 100%;
+    border: none;
+    outline: none;
+    padding-left: 10px;
+    box-sizing: border-box;
+    background-color: rgb(255, 255, 255);
+}
+
+#messageForm>button {
+    width: 10%;
+    height: 100%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    border-left: 1px solid rgba(0, 0, 0, 0.089);
+    color: #0000008a;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+}
+
+#messageForm>button:hover {
+    color: #1b1b1b;
+    background-color: rgba(0, 0, 0, 0.048);
+}
+
+#messageForm>button:active {
+    color: #070707;
+    background-color: rgba(0, 0, 0, 0.137);
+}
+
+.status {
+    top: 49px;
+    left: 56px;
+    width: 12px;
+    height: 12px;
+    position: absolute;
+    border-radius: 100px;
+    border: solid 2px #fff;
+}
+
+.online {
+    background-color: #00ff7e;
+}
+
+.offline {
+    background-color: #dfdede;
+}
