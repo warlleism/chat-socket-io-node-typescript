@@ -32,6 +32,12 @@
             <ul id="messages"></ul>
             <form id="messageForm" action="">
                 <input id="input" type="text" placeholder="Digitar mensagem..." />
+                <div class="file-input-container">
+                    <span class="material-symbols-outlined">
+                        attach_file
+                    </span>
+                    <input id="inputFile" type="file" />
+                </div>
                 <button>
                     <span class="material-symbols-outlined">
                         send
@@ -50,6 +56,7 @@
         const userDetails = document.getElementById('userDetails');
         const chatHeader = document.getElementById('chatHeader');
         const user_container = document.getElementById('user-container');
+        const inputFile = document.getElementById('inputFile');
 
         let userId;
         let username;
@@ -65,6 +72,7 @@
             );
             messagesToRender.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
             messageList.innerHTML = '';
+
             messagesToRender.forEach(msg => {
                 const li = document.createElement('li');
 
@@ -73,8 +81,19 @@
                 usernameDiv.className = 'username';
 
                 const messageDiv = document.createElement('div');
-                messageDiv.textContent = msg.msg;
                 messageDiv.className = 'message';
+
+                if (msg.msg.startsWith('data:image')) {
+                    const img = document.createElement('img');
+                    img.src = msg.msg;
+                    img.style.width = '100%';
+                    img.style.height = '300px';
+                    img.style.objectFit = 'cover'
+                    img.style.marginBottom = '10px'
+                    messageDiv.appendChild(img);
+                } else {
+                    messageDiv.textContent = msg.msg;
+                }
 
                 const timeDiv = document.createElement('div');
                 timeDiv.textContent = msg.timestamp;
@@ -89,77 +108,38 @@
             });
         }
 
-        socket.on('userDetails', (data) => {
 
-            userId = data.id;
-            username = data.username;
+        socket.on('userDetails', ({ id, username, img: imgSrc, email: userEmail, phone: userPhone }) => {
 
-            const img = document.createElement('img');
-            img.src = data.img;
-            userDetails.appendChild(img);
+            const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+            const appendChildren = (parent, ...children) => children.forEach(child => parent.appendChild(child));
 
-            const name = document.createElement('div');
-            name.textContent = username;
-            userDetails.appendChild(name);
-
-            const profileTitle = document.createElement('div');
-            profileTitle.textContent = 'Perfil';
-            profileTitle.style.margin = '30px auto';
-            profileTitle.style.width = 'fit-content';
-            profileTitle.style.fontSize = '2rem';
-            profileTitle.style.fontWeight = '500';
-            profileTitle.style.color = '#434343';
-
-            const email = document.createElement('div');
-            email.textContent = data.email;
-
-            const phone = document.createElement('div');
-            phone.textContent = data.phone;
-
-            const profileDiv = document.createElement('div')
-            profileDiv.className = 'see-profile-container';
-            user_container.appendChild(profileDiv)
-            profileDiv.style.display = 'none';
-
-            const profileRowImg = document.createElement('div')
-            const clonedImg = img.cloneNode(true);
-            profileRowImg.appendChild(clonedImg);
-
-            const profileRowImgContainer = document.createElement('div')
-            profileRowImgContainer.className = 'profile-row-img-container';
-            profileRowImgContainer.appendChild(profileRowImg)
-
-            const profileRowInfo = document.createElement('div')
-            profileRowInfo.className = 'profile-row-info-personal';
-            const clonedName = name.cloneNode(true);
-            profileRowInfo.appendChild(clonedName)
-            profileRowInfo.appendChild(email)
-            profileRowInfo.appendChild(phone)
-
-            const profileRow = document.createElement('div')
-            profileRow.className = 'profile-row-info'
-            profileRow.appendChild(profileRowImgContainer)
-            profileRow.appendChild(profileRowInfo)
-
-            const iconSpan = document.createElement('span');
-            iconSpan.className = 'material-symbols-outlined close-icon';
-            iconSpan.style.marginRight = '10px';
-            iconSpan.style.fontSize = '1.5rem';
-            iconSpan.textContent = 'arrow_back_ios';
-
-            profileDiv.appendChild(profileTitle)
-            profileDiv.appendChild(iconSpan)
-            profileDiv.appendChild(profileRow)
-
-            img.addEventListener('click', () => {
-                profileDiv.style.display = profileDiv.style.display = 'block';
-            })
-
-            iconSpan.addEventListener('click', () => {
-                profileDiv.style.display = profileDiv.style.display = 'none';
-            })
-
+            userId = id;
             localStorage.setItem('userId', userId);
+
+            const img = createElement('img', { src: imgSrc });
+            const name = createElement('div', { textContent: username });
+            const profileTitle = createElement('div', { textContent: 'Perfil', style: 'margin: 30px auto; width: fit-content; font-size: 2rem; font-weight: 500; color: #434343;' });
+            const email = createElement('div', { textContent: userEmail });
+            const phone = createElement('div', { textContent: userPhone });
+
+            const profileDiv = createElement('div', { className: 'see-profile-container', style: 'display: none;' });
+            const profileRowImg = createElement('div');
+            const profileRowImgContainer = createElement('div', { className: 'profile-row-img-container' });
+            const profileRowInfo = createElement('div', { className: 'profile-row-info-personal' });
+            const profileRow = createElement('div', { className: 'profile-row-info' });
+            const iconSpan = createElement('span', { className: 'material-symbols-outlined close-icon', style: 'margin-right: 10px; font-size: 1.5rem;', textContent: 'arrow_back_ios' });
+
+            appendChildren(userDetails, img, name);
+            appendChildren(profileRowImg, img.cloneNode(true));
+            appendChildren(profileRowImgContainer, profileRowImg);
+            appendChildren(profileRowInfo, name.cloneNode(true), email, phone);
+            appendChildren(profileRow, profileRowImgContainer, profileRowInfo);
+            appendChildren(profileDiv, profileTitle, iconSpan, profileRow);
+            user_container.appendChild(profileDiv);
+
+            img.addEventListener('click', () => profileDiv.style.display = 'block');
+            iconSpan.addEventListener('click', () => profileDiv.style.display = 'none');
         });
 
         socket.on('updateUsers', (users) => {
@@ -187,12 +167,69 @@
         });
 
 
+        inputFile.addEventListener('change', (event) => {
+            const file = inputFile.files[0];
+
+            const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+
+            if (file) {
+                const fileName = file.name;
+                const fileType = file.type;
+                const reader = new FileReader();
+
+                reader.onload = () => {
+                    const base64 = reader.result;
+
+                    const outputDiv = createElement('div', { style: 'left: 50%; gap: 10px; height: 5%; width: 96%; bottom: 69px; display: flex; margin: 0 auto; overflow: hidden; position: absolute; padding: 10px; align-items: center; border-radius: 5px; transform: translateX(-50%); border: dashed 1px #0000006b;' });
+
+                    const outputDivCollumn = document.createElement('div');
+                    outputDiv.style.display = 'column';
+
+                    const fileNameElement = document.createElement('p');
+                    fileNameElement.textContent = `Nome do Arquivo: ${fileName}`;
+
+                    const fileTypeElement = document.createElement('p');
+                    fileTypeElement.textContent = `Tipo do Arquivo: ${fileType}`;
+
+                    const imgElement = createElement('img', { src: base64, style: 'width: 50px; height: 50px; object-fit: cover' });
+
+                    outputDiv.appendChild(imgElement);
+                    outputDivCollumn.appendChild(fileNameElement);
+                    outputDivCollumn.appendChild(fileTypeElement);
+                    outputDiv.appendChild(outputDivCollumn)
+
+                    messages.appendChild(outputDiv);
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
 
         document.getElementById('messageForm').addEventListener('submit', (event) => {
             event.preventDefault();
             const input = document.getElementById('input');
+            const file = inputFile.files[0];
 
-            if (input.value && currentChatUserId) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64 = reader.result;
+                    const messageData = {
+                        msg: base64 !== '' ? base64 : input.value,
+                        timestamp: new Date().toISOString(),
+                        username: username,
+                        userId: userId,
+                        targetId: currentChatUserId
+                    };
+
+                    if (messageData.msg !== '' && currentChatUserId) {
+                        socket.emit('message', messageData.msg, currentChatUserId);
+                        input.value = '';
+                        inputFile.value = '';
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
                 const messageData = {
                     msg: input.value,
                     timestamp: new Date().toISOString(),
@@ -200,15 +237,21 @@
                     userId: userId,
                     targetId: currentChatUserId
                 };
-                socket.emit('message', messageData.msg, currentChatUserId);
-                input.value = '';
+
+                if (messageData.msg !== '' && currentChatUserId) {
+                    socket.emit('message', messageData.msg, currentChatUserId);
+                    input.value = '';
+                    inputFile.value = '';
+                }
             }
         });
 
         socket.on('message', (data) => {
 
+            const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
             const target = data.targetId === userId ? data.userId : data.targetId;
             startPrivateChat(target, data);
+
             const li = document.createElement('li');
 
             const usernameDiv = document.createElement('div');
@@ -216,8 +259,14 @@
             usernameDiv.className = 'username';
 
             const messageDiv = document.createElement('div');
-            messageDiv.textContent = data.msg;
             messageDiv.className = 'message';
+
+            if (data.msg.startsWith('data:image')) {
+                const img = createElement('img', { src: data.msg, style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;' });
+                messageDiv.appendChild(img);
+            } else {
+                messageDiv.textContent = data.msg;
+            }
 
             const timeDiv = document.createElement('div');
             timeDiv.textContent = data.timestamp;
@@ -229,11 +278,12 @@
 
             li.className = data.userId === userId ? 'self' : 'other';
             messageList.appendChild(li);
+
             saveMessage(data);
         });
 
-
         function startPrivateChat(targetId, data) {
+            inputFile.value = '';
             document.querySelectorAll('#userList li').forEach(li => li.classList.remove('selected-user'));
             const targetUser = Array.from(userList.children).find(li => li.dataset.id === targetId);
             if (targetUser) {
