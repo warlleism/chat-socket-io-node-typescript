@@ -48,10 +48,8 @@ io.on('connection', (socket) => {
         status: users[userId].status
     });
 
-    // Atualizar lista de usuários para todos
     io.emit('updateUsers', Object.values(users));
 
-    // Enviar mensagens offline, se existirem
     if (offlineMessages[userId]) {
         offlineMessages[userId].forEach((msg: any) => {
             socket.emit('message', msg);
@@ -59,17 +57,15 @@ io.on('connection', (socket) => {
         delete offlineMessages[userId];
     }
 
-    // Lógica para mensagens
     socket.on('message', (msg, targetId = null) => {
         const now = new Date();
         const date = now.toLocaleDateString();
         const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const timestamp = `${date} ${time}`;
 
-        // Mensagem pode conter texto ou base64 de imagem
         const message = {
             username: users[userId].username,
-            msg, // Aqui vai a mensagem, que pode ser em base64
+            msg,
             timestamp,
             userId,
             targetId,
@@ -93,13 +89,11 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Iniciar chat privado
     socket.on('startPrivateChat', (targetId) => {
         privateChats[socket.id] = targetId;
         privateChats[targetId] = socket.id;
     });
 
-    // Desconectar usuário
     socket.on('disconnect', () => {
         console.log('user disconnected');
         delete userSockets[userId];

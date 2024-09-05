@@ -50,8 +50,6 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
-
-        
         var socket = io();
         const messageList = document.getElementById('messages');
         const userList = document.getElementById('userList');
@@ -90,12 +88,30 @@
                     img.src = msg.msg;
                     img.style.width = '100%';
                     img.style.height = '300px';
-                    img.style.objectFit = 'cover'
-                    img.style.marginBottom = '10px'
+                    img.style.objectFit = 'cover';
+                    img.style.marginBottom = '10px';
                     messageDiv.appendChild(img);
+                } else if (msg.msg.startsWith('data:application/pdf')) {
+                    const pdfFrame = document.createElement('iframe');
+                    pdfFrame.src = msg.msg;
+                    pdfFrame.style.width = '100%';
+                    pdfFrame.style.height = '300px';
+                    pdfFrame.style.border = 'none';
+                    pdfFrame.style.marginBottom = '10px';
+                    messageDiv.appendChild(pdfFrame);
+                } else if (msg.msg.startsWith('data:video')) {
+                    const video = document.createElement('video');
+                    video.src = msg.msg;
+                    video.controls = true;
+                    video.style.width = '100%';
+                    video.style.height = '300px';
+                    video.style.objectFit = 'cover';
+                    video.style.marginBottom = '10px';
+                    messageDiv.appendChild(video);
                 } else {
                     messageDiv.textContent = msg.msg;
                 }
+
 
                 const timeDiv = document.createElement('div');
                 timeDiv.textContent = msg.timestamp;
@@ -182,6 +198,8 @@
                 reader.onload = () => {
                     const base64 = reader.result;
 
+                    console.log(base64)
+
                     const outputDiv = createElement('div', { style: 'left: 50%; gap: 10px; height: 5%; width: 96%; bottom: 69px; display: flex; margin: 0 auto; overflow: hidden; position: absolute; padding: 10px; align-items: center; border-radius: 5px; transform: translateX(-50%); border: dashed 1px #0000006b;' });
 
                     const outputDivCollumn = document.createElement('div');
@@ -199,6 +217,8 @@
                         mediaElement = createElement('img', { src: base64, style: 'width: 50px; height: 50px; object-fit: cover' });
                     } else if (fileType.startsWith('video')) {
                         mediaElement = createElement('video', { src: base64, controls: true, style: 'width: 50px; height: 50px; object-fit: cover' });
+                    } else if (fileType.startsWith('application/pdf')) {
+                        mediaElement = createElement('iframe', { src: base64, style: 'width: 50px; height: 50px;', type: 'application/pdf' });
                     }
 
                     if (mediaElement) {
@@ -246,12 +266,13 @@
                     socket.emit('message', messageData.msg, currentChatUserId);
                     input.value = '';
                     inputFile.value = '';
+
+                    console.log(inputFile.value)
                 }
             }
         });
 
         socket.on('message', (data) => {
-
 
             const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
             const target = data.targetId === userId ? data.userId : data.targetId;
@@ -272,9 +293,13 @@
             } else if (data.msg.startsWith('data:video')) {
                 const video = createElement('video', { src: data.msg, controls: true, style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;' });
                 messageDiv.appendChild(video);
+            } else if (data.msg.startsWith('data:application/pdf')) {
+                const pdfFrame = createElement('iframe', { src: data.msg, style: 'width: 100%; height: 300px;', type: 'application/pdf' });
+                messageDiv.appendChild(pdfFrame);
             } else {
                 messageDiv.textContent = data.msg;
             }
+
 
             const timeDiv = document.createElement('div');
             timeDiv.textContent = data.timestamp;
@@ -286,7 +311,6 @@
 
             li.className = data.userId === userId ? 'self' : 'other';
             messageList.appendChild(li);
-
             saveMessage(data);
         });
 
