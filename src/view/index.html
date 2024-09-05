@@ -50,6 +50,8 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
+
+        
         var socket = io();
         const messageList = document.getElementById('messages');
         const userList = document.getElementById('userList');
@@ -191,12 +193,20 @@
                     const fileTypeElement = document.createElement('p');
                     fileTypeElement.textContent = `Tipo do Arquivo: ${fileType}`;
 
-                    const imgElement = createElement('img', { src: base64, style: 'width: 50px; height: 50px; object-fit: cover' });
+                    let mediaElement;
 
-                    outputDiv.appendChild(imgElement);
+                    if (fileType.startsWith('image')) {
+                        mediaElement = createElement('img', { src: base64, style: 'width: 50px; height: 50px; object-fit: cover' });
+                    } else if (fileType.startsWith('video')) {
+                        mediaElement = createElement('video', { src: base64, controls: true, style: 'width: 50px; height: 50px; object-fit: cover' });
+                    }
+
+                    if (mediaElement) {
+                        outputDiv.appendChild(mediaElement);
+                    }
                     outputDivCollumn.appendChild(fileNameElement);
                     outputDivCollumn.appendChild(fileTypeElement);
-                    outputDiv.appendChild(outputDivCollumn)
+                    outputDiv.appendChild(outputDivCollumn);
 
                     messages.appendChild(outputDiv);
                 };
@@ -204,6 +214,7 @@
                 reader.readAsDataURL(file);
             }
         });
+
 
         document.getElementById('messageForm').addEventListener('submit', (event) => {
             event.preventDefault();
@@ -214,12 +225,9 @@
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result;
+
                     const messageData = {
                         msg: base64 !== '' ? base64 : input.value,
-                        timestamp: new Date().toISOString(),
-                        username: username,
-                        userId: userId,
-                        targetId: currentChatUserId
                     };
 
                     if (messageData.msg !== '' && currentChatUserId) {
@@ -232,10 +240,6 @@
             } else {
                 const messageData = {
                     msg: input.value,
-                    timestamp: new Date().toISOString(),
-                    username: username,
-                    userId: userId,
-                    targetId: currentChatUserId
                 };
 
                 if (messageData.msg !== '' && currentChatUserId) {
@@ -247,6 +251,7 @@
         });
 
         socket.on('message', (data) => {
+
 
             const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
             const target = data.targetId === userId ? data.userId : data.targetId;
@@ -264,6 +269,9 @@
             if (data.msg.startsWith('data:image')) {
                 const img = createElement('img', { src: data.msg, style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;' });
                 messageDiv.appendChild(img);
+            } else if (data.msg.startsWith('data:video')) {
+                const video = createElement('video', { src: data.msg, controls: true, style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;' });
+                messageDiv.appendChild(video);
             } else {
                 messageDiv.textContent = data.msg;
             }
