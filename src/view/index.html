@@ -57,75 +57,120 @@
         const chatHeader = document.getElementById('chatHeader');
         const user_container = document.getElementById('user-container');
         const inputFile = document.getElementById('inputFile');
+        const outputDiv = document.querySelector('.output-div');
 
         let userId;
         let username;
         let currentChatUserId = null;
 
-        function loadMessages() {
-            if (currentChatUserId === null) return;
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('chatDatabase', 1);
 
-            const savedMessages = JSON.parse(localStorage.getItem('messages')) || [];
-            const messagesToRender = savedMessages.filter(msg =>
-                (msg.userId === userId && msg.targetId === currentChatUserId) ||
-                (msg.targetId === userId && msg.userId === currentChatUserId)
-            );
-            messagesToRender.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-            messageList.innerHTML = '';
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('messages')) {
+                        db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
 
-            messagesToRender.forEach(msg => {
-                const li = document.createElement('li');
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
 
-                const usernameDiv = document.createElement('div');
-                usernameDiv.textContent = msg.username;
-                usernameDiv.className = 'username';
-
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-
-                if (msg.msg.startsWith('data:image')) {
-                    const img = document.createElement('img');
-                    img.src = msg.msg;
-                    img.style.width = '100%';
-                    img.style.height = '300px';
-                    img.style.objectFit = 'cover';
-                    img.style.marginBottom = '10px';
-                    messageDiv.appendChild(img);
-                } else if (msg.msg.startsWith('data:application/pdf')) {
-                    const pdfFrame = document.createElement('iframe');
-                    pdfFrame.src = msg.msg;
-                    pdfFrame.style.width = '100%';
-                    pdfFrame.style.height = '300px';
-                    pdfFrame.style.border = 'none';
-                    pdfFrame.style.marginBottom = '10px';
-                    messageDiv.appendChild(pdfFrame);
-                } else if (msg.msg.startsWith('data:video')) {
-                    const video = document.createElement('video');
-                    video.src = msg.msg;
-                    video.controls = true;
-                    video.style.width = '100%';
-                    video.style.height = '300px';
-                    video.style.objectFit = 'cover';
-                    video.style.marginBottom = '10px';
-                    messageDiv.appendChild(video);
-                } else {
-                    messageDiv.textContent = msg.msg;
-                }
-
-
-                const timeDiv = document.createElement('div');
-                timeDiv.textContent = msg.timestamp;
-                timeDiv.className = 'time';
-
-                li.appendChild(usernameDiv);
-                li.appendChild(messageDiv);
-                li.appendChild(timeDiv);
-
-                li.className = msg.userId === userId ? 'self' : 'other';
-                messageList.appendChild(li);
+                request.onerror = (event) => {
+                    reject(event.target.error);
+                };
             });
         }
 
+
+        async function saveMessage(messageData) {
+            try {
+                const db = await openDatabase();
+                const transaction = db.transaction('messages', 'readwrite');
+                const store = transaction.objectStore('messages');
+                store.put(messageData);
+                await transaction.complete;
+            } catch (error) {
+                console.error('Error saving message:', error);
+            }
+        }
+
+
+        async function loadMessages() {
+            if (currentChatUserId === null) return;
+
+            const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+
+            try {
+                const db = await openDatabase();
+                const transaction = db.transaction('messages', 'readonly');
+                const store = transaction.objectStore('messages');
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const savedMessages = request.result;
+                    const messagesToRender = savedMessages.filter(msg =>
+                        (msg.userId === userId && msg.targetId === currentChatUserId) ||
+                        (msg.targetId === userId && msg.userId === currentChatUserId)
+                    );
+                    messagesToRender.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    messageList.innerHTML = '';
+
+                    messagesToRender.forEach(msg => {
+                        const li = document.createElement('li');
+
+                        const usernameDiv = document.createElement('div');
+                        usernameDiv.textContent = msg.username;
+                        usernameDiv.className = 'username';
+
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message';
+
+                        if (msg.msg.startsWith('data:image')) {
+                            const img = createElement('img', {
+                                src: msg.msg,
+                                style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;',
+                            });
+                            messageDiv.appendChild(img);
+                        } else if (msg.msg.startsWith('data:application/pdf')) {
+                            const pdfFrame = createElement('iframe', {
+                                src: msg.msg,
+                                style: 'width: 100%; height: 300px; border: none; margin-bottom: 10px;',
+                            });
+                            messageDiv.appendChild(pdfFrame);
+                        } else if (msg.msg.startsWith('data:video')) {
+                            const video = createElement('video', {
+                                src: msg.msg,
+                                controls: true,
+                                style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;',
+                            });
+                            messageDiv.appendChild(video);
+                        } else {
+                            messageDiv.textContent = msg.msg;
+                        }
+
+                        const timeDiv = document.createElement('div');
+                        timeDiv.textContent = msg.timestamp;
+                        timeDiv.className = 'time';
+
+                        li.appendChild(usernameDiv);
+                        li.appendChild(messageDiv);
+                        li.appendChild(timeDiv);
+
+                        li.className = msg.userId === userId ? 'self' : 'other';
+                        messageList.appendChild(li);
+                    });
+                };
+
+                request.onerror = () => {
+                    console.error('Error loading messages:', request.error);
+                };
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
 
         socket.on('userDetails', ({ id, username, img: imgSrc, email: userEmail, phone: userPhone }) => {
 
@@ -137,7 +182,7 @@
 
             const img = createElement('img', { src: imgSrc });
             const name = createElement('div', { textContent: username });
-            const profileTitle = createElement('div', { textContent: 'Perfil', style: 'margin: 30px auto; width: fit-content; font-size: 2rem; font-weight: 500; color: #434343;' });
+            const profileTitle = createElement('div', { textContent: 'Perfil', style: 'margin: 30px auto; width: fit-content; font-size: 2rem; font-weight: 500; color: #fff;' });
             const email = createElement('div', { textContent: userEmail });
             const phone = createElement('div', { textContent: userPhone });
 
@@ -198,27 +243,44 @@
                 reader.onload = () => {
                     const base64 = reader.result;
 
-                    console.log(base64)
+                    const outputDiv = createElement('div', { style: 'left: 50%; gap: 10px; height: 19%; width: 96%; bottom: 69px; display: flex; margin: 0 auto; overflow: hidden; position: absolute; padding: 10px; background-color: #ffffff; border-radius: 5px; transform: translateX(-50%); border: dashed 1px #0000006b;' });
+                    outputDiv.className = 'output-div';
 
-                    const outputDiv = createElement('div', { style: 'left: 50%; gap: 10px; height: 5%; width: 96%; bottom: 69px; display: flex; margin: 0 auto; overflow: hidden; position: absolute; padding: 10px; align-items: center; border-radius: 5px; transform: translateX(-50%); border: dashed 1px #0000006b;' });
+                    const outputDivCollumn = createElement('div', {
+                        style: 'display: column'
+                    });
 
-                    const outputDivCollumn = document.createElement('div');
-                    outputDiv.style.display = 'column';
+                    const fileNameElement = createElement('p', {
+                        textContent: `Nome do Arquivo: ${fileName}`,
+                        style: 'font-size: 1.5rem; color: #272727; margin-bottom: 5px; letter-spacing: -.3px;'
+                    });
 
-                    const fileNameElement = document.createElement('p');
-                    fileNameElement.textContent = `Nome do Arquivo: ${fileName}`;
+                    const fileTypeElement = createElement('p', {
+                        textContent: `Tipo do Arquivo: ${fileType}`,
+                        style: 'font-size: .9rem; color: #000000a8;'
+                    });
 
-                    const fileTypeElement = document.createElement('p');
-                    fileTypeElement.textContent = `Tipo do Arquivo: ${fileType}`;
+                    const deleteIcon = createElement('span', {
+                        className: 'material-symbols-outlined',
+                        textContent: 'delete_forever',
+                        style: 'font-size: 1.5rem; color: rgba(0, 0, 0, 0.66); cursor: pointer; position: absolute; right: 13px; top: 11px; padding: 10px; border-radius: 100px; background: #efefef;'
+                    });
+
+                    deleteIcon.addEventListener('click', () => {
+                        outputDiv.style.display = 'none';
+                        inputFile.value = '';
+                    })
 
                     let mediaElement;
 
                     if (fileType.startsWith('image')) {
-                        mediaElement = createElement('img', { src: base64, style: 'width: 50px; height: 50px; object-fit: cover' });
+                        mediaElement = createElement('img', { src: base64, style: 'width: 217px; height: 100%; object-fit: cover' });
                     } else if (fileType.startsWith('video')) {
-                        mediaElement = createElement('video', { src: base64, controls: true, style: 'width: 50px; height: 50px; object-fit: cover' });
+                        mediaElement = createElement('video', { src: base64, controls: true, style: 'width: 217px; height: 100%; object-fit: cover' });
+                        mediaElement.controls = true;
+                        mediaElement.autoplay = true;
                     } else if (fileType.startsWith('application/pdf')) {
-                        mediaElement = createElement('iframe', { src: base64, style: 'width: 50px; height: 50px;', type: 'application/pdf' });
+                        mediaElement = createElement('iframe', { src: base64, style: 'width: 217px; height: 100%;', type: 'application/pdf' });
                     }
 
                     if (mediaElement) {
@@ -226,6 +288,7 @@
                     }
                     outputDivCollumn.appendChild(fileNameElement);
                     outputDivCollumn.appendChild(fileTypeElement);
+                    outputDiv.appendChild(deleteIcon);
                     outputDiv.appendChild(outputDivCollumn);
 
                     messages.appendChild(outputDiv);
@@ -245,73 +308,79 @@
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result;
-
-                    const messageData = {
-                        msg: base64 !== '' ? base64 : input.value,
-                    };
+                    const messageData = { msg: base64 !== '' ? base64 : input.value };
 
                     if (messageData.msg !== '' && currentChatUserId) {
-                        socket.emit('message', messageData.msg, currentChatUserId);
+                        outputDiv.style.display = 'none';
                         input.value = '';
                         inputFile.value = '';
+                        socket.emit('message', messageData.msg, currentChatUserId);
+
                     }
                 };
                 reader.readAsDataURL(file);
             } else {
-                const messageData = {
-                    msg: input.value,
-                };
+                const messageData = { msg: input.value };
 
                 if (messageData.msg !== '' && currentChatUserId) {
                     socket.emit('message', messageData.msg, currentChatUserId);
                     input.value = '';
-                    inputFile.value = '';
-
-                    console.log(inputFile.value)
                 }
             }
+
+            outputDiv.style.display = 'none';
+
         });
 
         socket.on('message', (data) => {
-
             const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
-            const target = data.targetId === userId ? data.userId : data.targetId;
-            startPrivateChat(target, data);
 
-            const li = document.createElement('li');
+            const li = createElement('li', {
+                className: data.userId === userId ? 'self' : 'other',
+            });
 
-            const usernameDiv = document.createElement('div');
-            usernameDiv.textContent = data.username;
-            usernameDiv.className = 'username';
+            const usernameDiv = createElement('div', {
+                textContent: data.username,
+                className: 'username',
+            });
 
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
+            const messageDiv = createElement('div', { className: 'message' });
 
             if (data.msg.startsWith('data:image')) {
-                const img = createElement('img', { src: data.msg, style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;' });
+                const img = createElement('img', {
+                    src: data.msg,
+                    style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;',
+                });
                 messageDiv.appendChild(img);
             } else if (data.msg.startsWith('data:video')) {
-                const video = createElement('video', { src: data.msg, controls: true, style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;' });
+                const video = createElement('video', {
+                    src: data.msg,
+                    controls: true,
+                    autoplay: true,
+                    style: 'width: 100%; height: 300px; object-fit: cover; margin-bottom: 10px;',
+                });
                 messageDiv.appendChild(video);
             } else if (data.msg.startsWith('data:application/pdf')) {
-                const pdfFrame = createElement('iframe', { src: data.msg, style: 'width: 100%; height: 300px;', type: 'application/pdf' });
+                const pdfFrame = createElement('iframe', {
+                    src: data.msg,
+                    style: 'width: 100%; height: 300px; border: none; margin-bottom: 10px;',
+                });
                 messageDiv.appendChild(pdfFrame);
             } else {
                 messageDiv.textContent = data.msg;
             }
 
+            const timeDiv = createElement('div', {
+                textContent: data.timestamp,
+                className: 'time',
+            });
 
-            const timeDiv = document.createElement('div');
-            timeDiv.textContent = data.timestamp;
-            timeDiv.className = 'time';
-
-            li.appendChild(usernameDiv);
-            li.appendChild(messageDiv);
-            li.appendChild(timeDiv);
-
-            li.className = data.userId === userId ? 'self' : 'other';
+            li.append(usernameDiv, messageDiv, timeDiv);
             messageList.appendChild(li);
             saveMessage(data);
+
+            const target = data.targetId === userId ? data.userId : data.targetId;
+            startPrivateChat(target, data);
         });
 
         function startPrivateChat(targetId, data) {
@@ -338,11 +407,6 @@
             chatHeader.appendChild(divName);
         }
 
-        function saveMessage(messageData) {
-            let savedMessages = JSON.parse(localStorage.getItem('messages')) || [];
-            savedMessages.push(messageData);
-            localStorage.setItem('messages', JSON.stringify(savedMessages));
-        }
     </script>
 
 </body>
