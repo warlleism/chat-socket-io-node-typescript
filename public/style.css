@@ -46,7 +46,7 @@ body {
     overflow: hidden;
     height: 100%;
     position: absolute;
-    background-image: linear-gradient(225deg, hsl(192deg 100% 20%) 0%, hsl(183deg 100% 29%) 8%, hsl(171deg 100% 39%) 17%, hsl(136deg 100% 76%) 25%, hsl(135deg 100% 79%) 33%, hsl(135deg 100% 82%) 42%, hsl(135deg 100% 85%) 50%, hsl(134deg 100% 90%) 58%, hsl(133deg 100% 95%) 67%, hsl(0deg 0% 100%) 75%, hsl(300deg 100% 100%) 83%, hsl(300deg 100% 100%) 92%, hsl(0deg 0% 100%) 100%);
+
 
     .close-icon {
         position: absolute;
@@ -56,6 +56,9 @@ body {
         z-index: 999;
         color: #ffffff;
     }
+
+    ;
+    background-image: linear-gradient(180deg, hsl(189deg 100% 20%) 0%, hsl(164deg 100% 43%) 20%, hsl(140deg 100% 87%) 40%, hsl(300deg 100% 100%) 60%, hsl(300deg 100% 100%) 80%, hsl(0deg 0% 100%) 100%);
 }
 
 .user-container>.see-profile-container>.profile-row-info {
@@ -98,9 +101,9 @@ body {
             display: flex;
             text-align: center;
             width: 100%;
-            font-weight: 400;
+            font-weight: 500;
             font-size: 2rem;
-            color: rgb(34, 34, 34);
+            color: rgb(61 61 61);
             justify-content: center;
             align-items: center;
         }
@@ -124,8 +127,8 @@ body {
             text-align: center;
             width: 100%;
             font-weight: 300;
-            font-size: 1rem;
-            color: rgb(34, 34, 34);
+            font-size: .9rem;
+            color: rgb(51 51 51);
         }
     }
 }
@@ -211,6 +214,7 @@ body {
     height: 100%;
     display: flex;
     position: relative;
+    justify-content: space-between;
     box-sizing: border-box;
     flex-direction: column;
     background-color: #f9f9f9;
@@ -220,11 +224,11 @@ body {
 .chat-container>.chat-header {
     gap: 10px;
     width: 100%;
-    height: 82px;
+    height: 10%;
     display: flex;
     padding: 10px;
     align-items: center;
-    margin-bottom: 30px;
+    /* margin-bottom: 30px; */
     color: #252525;
     font-size: 1.2rem;
     box-sizing: border-box;
@@ -239,9 +243,13 @@ body {
 }
 
 #messages {
-    padding-bottom: 90px;
+    height: 84%;
+    /* padding-bottom: 90px; */
     box-sizing: border-box;
     overflow-y: auto;
+    background: #e9e9e9a3;
+    transition: .5s ease-in-out;
+    scroll-behavior: smooth;
 }
 
 #messages::-webkit-scrollbar {
@@ -321,27 +329,24 @@ body {
 }
 
 #messageForm {
-    z-index: 99;
-    left: 50%;
-    height: 5%;
-    width: 96%;
-    bottom: 10px;
+    height: 9%;
+    width: 100%;
     display: flex;
-    background: #fff;
+    background: #dbdada;
     margin: 0 auto;
     overflow: hidden;
-    position: absolute;
     align-items: center;
-    border-radius: 100px;
-    transform: translateX(-50%);
-    border: solid 1px #0000006b;
+    justify-content: space-evenly;
+
 
     .file-input-container {
-        width: 5%;
-        height: 100%;
+        width: 4%;
+        height: 61%;
+        border-radius: 5px;
         display: flex;
         cursor: pointer;
         overflow: hidden;
+        background: #f0f2f5;
         position: relative;
         align-items: center;
         justify-content: center;
@@ -360,47 +365,55 @@ body {
             position: absolute;
 
         }
+
+        
+    @media screen and (max-width: 1200px) {
+        width: 7%;
     }
+    }
+
 }
 
 
 #messageForm>input {
-    width: 90%;
-    height: 100%;
+    width: 88%;
+    height: 61%;
     border: none;
     outline: none;
+    border-radius: 5px;
     padding-left: 10px;
     box-sizing: border-box;
-    background-color: rgb(255, 255, 255);
+    background-color: rgb(240 242 245);
 
     @media screen and (max-width: 1200px) {
-        width: 83%;
+        width: 80%;
     }
 }
 
 #messageForm>button {
-    width: 5%;
-    height: 100%;
+    width: 4%;
     border: none;
     cursor: pointer;
     display: flex;
     color: #fff;
+    border-radius: 5px;
     align-items: center;
     justify-content: center;
-    background-color: #979797;
+    background-color: #00c7a9;
+    height: 61%;
 
     @media screen and (max-width: 1200px) {
-        width: 12%;
+        width: 7%;
     }
 }
 
 #messageForm>button:hover {
-    color: #1b1b1b;
+    color: #5f5f5f;
 }
 
 #messageForm>button:active {
-    color: #070707;
-    background-color: rgba(0, 0, 0, 0.137);
+    color: #5f5f5f;
+    background-color: #028672;
 }
 
 .status {

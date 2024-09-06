@@ -193,12 +193,15 @@ inputFile.addEventListener('change', (event) => {
     if (file) {
         const fileName = file.name;
         const fileType = file.type;
+        const fileSizeInBytes = file.size;
+        const fileSizeInKB = fileSizeInBytes / 1024 ? `Tamanho do arquivo: ${fileSizeInBytes.toFixed(2)} KB` : `Tamanho do arquivo: ${fileSizeInBytes.toFixed(2)} MB`
+
         const reader = new FileReader();
 
         reader.onload = () => {
             const base64 = reader.result;
 
-            const outputDiv = createElement('div', { style: 'left: 50%; gap: 10px; height: 19%; width: 96%; bottom: 69px; display: flex; margin: 0 auto; overflow: hidden; position: absolute; padding: 10px; background-color: #ffffff; border-radius: 5px; transform: translateX(-50%); border: dashed 1px #0000006b;' });
+            const outputDiv = createElement('div', { style: 'left: 50%; gap: 10px; height: 19%; width: 96%; bottom: 90px; display: flex; margin: 0 auto; overflow: hidden; position: absolute; padding: 10px; background-color: #ffffff; border-radius: 5px; transform: translateX(-50%); border: dashed 1px #0000006b;' });
             outputDiv.className = 'output-div';
 
             const outputDivCollumn = createElement('div', {
@@ -212,7 +215,12 @@ inputFile.addEventListener('change', (event) => {
 
             const fileTypeElement = createElement('p', {
                 textContent: `Tipo do Arquivo: ${fileType}`,
-                style: 'font-size: .9rem; color: #000000a8;'
+                style: 'font-size: .9rem; color: #000000a8; margin-bottom: 5px;'
+            });
+
+            const fileSizeElement = createElement('p', {
+                textContent: fileSizeInKB,
+                style: 'font-size: .8rem; color: #000000a8;'
             });
 
             const deleteIcon = createElement('span', {
@@ -224,7 +232,6 @@ inputFile.addEventListener('change', (event) => {
             deleteIcon.addEventListener('click', () => {
                 inputFile.value = '';
                 outputDiv.remove();
-
             })
 
             let mediaElement;
@@ -246,6 +253,7 @@ inputFile.addEventListener('change', (event) => {
             }
             outputDivCollumn.appendChild(fileNameElement);
             outputDivCollumn.appendChild(fileTypeElement);
+            outputDivCollumn.appendChild(fileSizeElement);
             outputDiv.appendChild(deleteIcon);
             outputDiv.appendChild(outputDivCollumn);
 
@@ -272,8 +280,6 @@ document.getElementById('messageForm').addEventListener('submit', (event) => {
                 input.value = '';
                 inputFile.value = '';
                 socket.emit('message', messageData.msg, currentChatUserId);
-
-
             }
         };
         reader.readAsDataURL(file);
@@ -286,11 +292,10 @@ document.getElementById('messageForm').addEventListener('submit', (event) => {
         }
     }
 
-
-
 });
 
 socket.on('message', (data) => {
+
     const createElement = (tag, props = {}) => Object.assign(document.createElement(tag), props);
 
     const li = createElement('li', {
@@ -346,6 +351,7 @@ socket.on('message', (data) => {
 
     const target = data.targetId === userId ? data.userId : data.targetId;
     startPrivateChat(target, data);
+
 });
 
 function startPrivateChat(targetId, data) {
@@ -370,4 +376,7 @@ function startPrivateChat(targetId, data) {
     divName.textContent = data.username;
     chatHeader.appendChild(headerImg);
     chatHeader.appendChild(divName);
+    setTimeout(() => {
+        messageList.scrollTop = messageList.scrollHeight * 100;
+    }, 100)
 }
