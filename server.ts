@@ -34,7 +34,8 @@ const privateChats: any = {};
 const offlineMessages: any = {};
 
 io.on('connection', (socket) => {
-    const userId = Object.keys(users)[Math.floor(Math.random() * 5)];
+    const userId = Object.keys(users)[Math.random() < 0.5 ? 0 : 4];
+
     userSockets[userId] = socket.id;
 
     const userName = users[userId].username;

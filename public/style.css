@@ -77,6 +77,12 @@ body {
             margin-top: 43px;
             object-fit: cover;
             border-radius: 1000px;
+            border: solid 2px #fff;
+
+            @media screen and (max-width: 1200px) {
+                width: 134px;
+                height: 137px;
+            }
         }
     }
 
@@ -338,19 +344,20 @@ body {
         overflow: hidden;
         position: relative;
         align-items: center;
-        /* background-color: #fff; */
         justify-content: center;
+
         span {
             pointer-events: none;
-        color: rgb(53, 53, 53);
+            color: rgb(53, 53, 53);
         }
+
         input {
             cursor: pointer;
-        opacity: 0;
-        width: 500px;
-        height: 100%;
-        left: -113px;
-        position: absolute;
+            opacity: 0;
+            width: 500px;
+            height: 100%;
+            left: -113px;
+            position: absolute;
 
         }
     }
@@ -365,6 +372,10 @@ body {
     padding-left: 10px;
     box-sizing: border-box;
     background-color: rgb(255, 255, 255);
+
+    @media screen and (max-width: 1200px) {
+        width: 83%;
+    }
 }
 
 #messageForm>button {
@@ -377,6 +388,10 @@ body {
     align-items: center;
     justify-content: center;
     background-color: #979797;
+
+    @media screen and (max-width: 1200px) {
+        width: 12%;
+    }
 }
 
 #messageForm>button:hover {
